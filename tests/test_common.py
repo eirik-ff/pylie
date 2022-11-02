@@ -18,7 +18,7 @@ def test_to_rotation_matrix_results_in_valid_rotation():
 
 def test_to_rotation_matrix_results_in_close_rotation():
     angle = 0.5 * np.pi
-    axis = np.array([[1, 0, 0]]).T
+    axis = np.array([1, 0, 0])
     R = SO3.Exp(angle * axis).matrix
 
     # Invalidate a valid rotation matrix by scaling it.

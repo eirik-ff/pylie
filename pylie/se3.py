@@ -10,7 +10,7 @@ from pylie import SO3
 class SE3:
     """Represents an element of the SE(3) Lie group (poses in 3D)."""
 
-    def __init__(self, rotation: SO3 = SO3(), translation: npt.NDArray = np.zeros((3, 1))):
+    def __init__(self, rotation: SO3 = SO3(), translation: npt.NDArray = np.zeros((3,))):
         """Constructs an SE(3) element.
         The default is the identity element.
 
@@ -28,7 +28,7 @@ class SE3:
         :return: The SE(3) element.
         """
 
-        return cls(SO3(T[:3, :3]), T[:3, 3:4])
+        return cls(SO3(T[:3, :3]), T[:3, 3])
 
     @property
     def rotation(self) -> SO3:
@@ -63,8 +63,8 @@ class SE3:
 
         :param t: 3D column vector
         """
-        if not isinstance(t, np.ndarray) and t.shape == (3, 1):
-            raise TypeError('Translation must be a 3D column vector')
+        if not isinstance(t, np.ndarray) and t.shape == (3,):
+            raise TypeError('Translation must be a 3D column vector of shape (3,)')
 
         self._translation = t
 
@@ -75,7 +75,7 @@ class SE3:
         """
         T = np.identity(4)
         T[0:3, 0:3] = self.rotation.matrix
-        T[0:3, 3] = self.translation.T
+        T[0:3, 3] = self.translation
         return T
 
     def to_tuple(self) -> Tuple[SO3, npt.NDArray]:
@@ -124,8 +124,8 @@ class SE3:
         :param xi_vec: The tangent space vector, a 6D column vector xi_vec = [rho_vec, theta_vec]^T.
         :return: The perturbed SE3 element Y = X :math:`\\oplus` xi_vec.
         """
-        if not (isinstance(xi_vec, np.ndarray) and xi_vec.shape == (6, 1)):
-            raise TypeError('Argument must be a 6D column vector')
+        if not (isinstance(xi_vec, np.ndarray) and xi_vec.shape == (6,)):
+            raise TypeError('Argument must be a 6D column vector of shape (6,)')
 
         return X @ SE3.Exp(xi_vec)
 
@@ -147,7 +147,7 @@ class SE3:
         theta, u_vec = self.rotation.Log(split_angle_axis=True)
 
         if theta == 0:
-            return np.vstack((self.translation, np.zeros((3, 1))))
+            return np.hstack((self.translation, np.zeros((3,))))
 
         theta_vec = theta * u_vec
 
@@ -160,7 +160,7 @@ class SE3:
 
         rho_vec = V_inv @ self.translation
 
-        return np.vstack((rho_vec, theta_vec))
+        return np.hstack((rho_vec, theta_vec))
 
     def jac_inverse_X_wrt_X(X) -> npt.NDArray:
         """Computes the Jacobian of the inverse operation X.inverse() with respect to the element X.
@@ -271,7 +271,7 @@ class SE3:
         :param xi_vec: 6d tangent space column vector xi_vec = [rho_vec, theta_vec]^T.
         :return: The Lie Algebra (4x4 matrix).
         """
-        return np.block([[SO3.hat(xi_vec[3:]), xi_vec[:3]],
+        return np.block([[SO3.hat(xi_vec[3:]), xi_vec[:3, None]],
                          [np.zeros((1, 4))]])
 
     @staticmethod
@@ -282,7 +282,7 @@ class SE3:
         :param xi_hat: The Lie Algebra (4x4 matrix)
         :return: 6d tangent space column vector xi_vec = [rho_vec, theta_vec]^T.
         """
-        return np.vstack((xi_hat[:3, 3:4], SO3.vee(xi_hat[:3, :3])))
+        return np.hstack((xi_hat[:3, 3], SO3.vee(xi_hat[:3, :3])))
 
     @staticmethod
     def Exp(xi_vec: npt.NDArray) -> npt.NDArray:

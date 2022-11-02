@@ -109,7 +109,7 @@ class SO3:
 
         if theta < 1e-10:
             theta = 0
-            u_vec = np.array([[0, 0, 0]]).T
+            u_vec = np.array([0, 0, 0])
         else:
             u_vec = SO3.vee(R - R.T) / (2 * np.sin(theta))
 
@@ -156,8 +156,8 @@ class SO3:
         :param theta_vec: The tangent space vector, a 3D column vector.
         :return: The perturbed SO3 element Y = X :math:`\\oplus` theta_vec.
         """
-        if not (isinstance(theta_vec, np.ndarray) and theta_vec.shape == (3, 1)):
-            raise TypeError('Argument must be a 3D column vector')
+        if not (isinstance(theta_vec, np.ndarray) and theta_vec.shape == (3,)):
+            raise TypeError('Argument must be a 3D column vector of shape (3,)')
 
         return self @ SO3.Exp(theta_vec)
 
@@ -282,9 +282,9 @@ class SO3:
         :return: The Lie Algebra (3x3 matrix).
         """
         theta_vec = theta_vec.flatten()
-        return np.array([[0, -theta_vec[2], theta_vec[1]]
-                            , [theta_vec[2], 0, -theta_vec[0]]
-                            , [-theta_vec[1], theta_vec[0], 0]])
+        return np.array([[0, -theta_vec[2], theta_vec[1]], 
+                         [theta_vec[2], 0, -theta_vec[0]], 
+                         [-theta_vec[1], theta_vec[0], 0]])
 
     @staticmethod
     def vee(theta_hat: npt.NDArray) -> npt.NDArray:
@@ -294,7 +294,7 @@ class SO3:
         :param theta_hat: The Lie Algebra (3x3 matrix)
         :return: 3d tangent space column vector.
         """
-        return np.array([[theta_hat[2, 1], theta_hat[0, 2], theta_hat[1, 0]]]).T
+        return np.array([theta_hat[2, 1], theta_hat[0, 2], theta_hat[1, 0]])
 
     @staticmethod
     def Exp(theta_vec: npt.NDArray) -> SO3:

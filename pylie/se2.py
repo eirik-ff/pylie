@@ -7,11 +7,10 @@ import numpy as np
 from pylie import SO2
 
 
-
 class SE2:
     """Represents an element of the SE(2) Lie group (poses in 2D)."""
 
-    def __init__(self, rotation: SO2 = SO2(), translation: npt.NDArray = np.zeros((2,1))):
+    def __init__(self, rotation: SO2 = SO2(), translation: npt.NDArray = np.zeros((2,))):
         """Constructs an SE(2) element.
         The default is the identity element.
 
@@ -28,7 +27,7 @@ class SE2:
         :param T: 3x3 or 2x3 pose matrix.
         :return: The SE(2) element.
         """
-        return cls(SO2.from_matrix(T[:2, :2]), T[:2, 2:3])
+        return cls(SO2.from_matrix(T[:2, :2]), T[:2, 2])
 
     @property
     def rotation(self) -> SO2:
@@ -63,7 +62,7 @@ class SE2:
 
         :param t: 2D column vector
         """
-        if not isinstance(t, np.ndarray) and t.shape == (2, 1):
+        if not isinstance(t, np.ndarray) and t.shape == (2,):
             raise TypeError('Translation must be a 2D column vector')
 
         self._translation = t
@@ -75,7 +74,7 @@ class SE2:
         """
         T = np.identity(3)
         T[0:2, 0:2] = self.rotation.to_matrix()
-        T[0:2, 2] = self.translation.T
+        T[0:2, 2] = self.translation
         return T
 
     def to_tuple(self) -> Tuple[SO2, npt.NDArray]:
@@ -93,7 +92,7 @@ class SE2:
         theta = self.rotation.Log()
 
         if theta == 0:
-            return np.vstack((self.translation, 0))
+            return np.hstack((self.translation, 0))
 
         a = np.sin(theta) / theta
         b = (1 - np.cos(theta)) / theta
@@ -101,7 +100,7 @@ class SE2:
         V_inv = (1.0 / (a**2 + b**2)) * np.array([[a, b], [-b, a]])
         rho_vec = V_inv @ self.translation
 
-        return np.vstack((rho_vec, theta))
+        return np.hstack((rho_vec, theta))
 
     def jac_inverse_X_wrt_X(X) -> npt.NDArray:
         """Computes the Jacobian of the inverse operation X.inverse() with respect to the element X.
@@ -116,7 +115,8 @@ class SE2:
         :param x: The 2D column vector x.
         :return: The Jacobian (3x2 matrix)
         """
-        return np.block([[X.rotation.to_matrix(), X.rotation.to_matrix() @ SO2.hat(1) @ x]])
+        return np.block([[X.rotation.to_matrix(), 
+                          X.rotation.to_matrix() @ SO2.hat(1) @ x[:, None]]])
 
     def jac_action_Xx_wrt_x(X) -> npt.NDArray:
         """Computes the Jacobian of the action X.action(x) with respect to the element X.
@@ -172,7 +172,7 @@ class SE2:
         R = self.rotation.to_matrix()
         t = self.translation
 
-        return np.block([[R, -SO2.hat(1.0) @ t],
+        return np.block([[R, -SO2.hat(1.0) @ t[:, None]],
                          [np.zeros((1, 2)), 1.0]])
 
     def oplus(X, xi_vec: npt.NDArray) -> SE2:
@@ -182,7 +182,7 @@ class SE2:
         :return: The perturbed SE2 element Y = X :math:`\\oplus` theta_vec.
         """
 
-        if not (isinstance(xi_vec, np.ndarray) and xi_vec.shape == (3, 1)):
+        if not (isinstance(xi_vec, np.ndarray) and xi_vec.shape == (3,)):
             raise TypeError('Argument must be a 3D column vector')
 
         return X @ SE2.Exp(xi_vec)
@@ -269,7 +269,7 @@ class SE2:
         :param xi_vec: 3D tangent space column vector xi_vec = [rho_vec, theta]^T.
         :return: The Lie Algebra (3x3 matrix).
         """
-        return np.block([[SO2.hat(xi_vec[2].item()), xi_vec[:2]],
+        return np.block([[SO2.hat(xi_vec[2].item()), xi_vec[:2, None]],
                          [np.zeros((1, 3))]])
 
     @staticmethod
@@ -280,7 +280,7 @@ class SE2:
         :param xi_hat: The Lie Algebra (3x3 matrix)
         :return: 3D tangent space column vector xi_vec = [rho_vec, theta]^T.
         """
-        return np.vstack((xi_hat[:2, 2:3], SO2.vee(xi_hat[:2, :2])))
+        return np.hstack((xi_hat[:2, 2], SO2.vee(xi_hat[:2, :2])))
 
     @staticmethod
     def Exp(xi_vec: npt.NDArray) -> SE2:
@@ -307,7 +307,7 @@ class SE2:
         :return: The Jacobian (3x3 matrix)
         """
         R_Y_inv = Y.rotation.inverse().to_matrix()
-        return np.block([[R_Y_inv, (R_Y_inv @ SO2.hat(1.0) @ Y.translation)],
+        return np.block([[R_Y_inv, (R_Y_inv @ SO2.hat(1.0) @ Y.translation[:, None])],
                          [np.array([0, 0, 1])]])
 
     @staticmethod
