@@ -5,13 +5,14 @@ from pylie import SO2
 class SE2:
     """Represents an element of the SE(2) Lie group (poses in 2D)."""
 
-    def __init__(self, pose_tuple=(SO2(), np.zeros((2, 1)))):
+    def __init__(self, rotation: SO2 = SO2(), translation: npt.NDArray = np.zeros((2,1))):
         """Constructs an SE(2) element.
         The default is the identity element.
 
         :param pose_tuple: A tuple (rotation (SO2), translation (2D column vector) (optional).
         """
-        self.rotation, self.translation = pose_tuple
+        self.rotation: SO2 = rotation
+        self.translation: npt.NDArray = translation
 
     @classmethod
     def from_matrix(cls, T):

@@ -12,7 +12,7 @@ def test_construct_identity_with_no_args():
 def test_construct_with_tuple():
     so3 = SO3() + np.array([[0.1, -0.3, 0.2]]).T
     t = np.array([[1, 2, 3]]).T
-    se3 = SE3((so3, t))
+    se3 = SE3(so3, t)
 
     np.testing.assert_equal(se3.rotation.matrix, so3.matrix)
     np.testing.assert_equal(se3.translation, t)
@@ -33,7 +33,7 @@ def test_construct_with_matrix():
 def test_to_matrix():
     so3 = SO3.from_roll_pitch_yaw(np.pi / 4, np.pi / 2, 3 * np.pi / 2)
     t = np.array([[3, 2, 1]]).T
-    se3 = SE3((so3, t))
+    se3 = SE3(so3, t)
     T = se3.to_matrix()
 
     np.testing.assert_equal(T[0:3, 0:3], so3.matrix)
@@ -44,7 +44,7 @@ def test_to_matrix():
 def test_to_tuple():
     so3 = SO3.from_roll_pitch_yaw(np.pi / 3, -np.pi / 2, -3 * np.pi / 2)
     t = np.array([[-1, 1, 3]]).T
-    se3 = SE3((so3, t))
+    se3 = SE3(so3, t)
     pose_tuple = se3.to_tuple()
 
     np.testing.assert_equal(pose_tuple[0], so3.matrix)
@@ -52,7 +52,7 @@ def test_to_tuple():
 
 
 def test_composition_with_identity():
-    X = SE3((SO3.from_roll_pitch_yaw(np.pi / 10, -np.pi / 3, 3 * np.pi / 4), np.array([[3, 2, 1]]).T))
+    X = SE3(SO3.from_roll_pitch_yaw(np.pi / 10, -np.pi / 3, 3 * np.pi / 4), np.array([[3, 2, 1]]).T)
 
     comp_with_identity = X.compose(SE3())
     comp_from_identity = SE3().compose(X)
@@ -62,8 +62,8 @@ def test_composition_with_identity():
 
 
 def test_composition():
-    X = SE3((SO3.rot_x(np.pi / 2), np.array([[1, 2, 3]]).T))
-    Y = SE3((SO3.rot_z(np.pi / 2), np.array([[0, 1, 0]]).T))
+    X = SE3(SO3.rot_x(np.pi / 2), np.array([[1, 2, 3]]).T)
+    Y = SE3(SO3.rot_z(np.pi / 2), np.array([[0, 1, 0]]).T)
 
     Z = X.compose(Y)
 
@@ -75,8 +75,8 @@ def test_composition():
 
 
 def test_composition_with_operator():
-    X = SE3((SO3.rot_x(3 * np.pi / 2), np.array([[1, 2, 3]]).T))
-    Y = SE3((SO3.rot_y(np.pi / 2), np.array([[-1, 0, 1]]).T))
+    X = SE3(SO3.rot_x(3 * np.pi / 2), np.array([[1, 2, 3]]).T)
+    Y = SE3(SO3.rot_y(np.pi / 2), np.array([[-1, 0, 1]]).T)
 
     Z = X @ Y
 
@@ -88,7 +88,7 @@ def test_composition_with_operator():
 
 
 def test_inverse():
-    X = SE3((SO3.from_roll_pitch_yaw(np.pi / 4, np.pi / 2, 3 * np.pi / 2), np.array([[1, -2, 3]]).T))
+    X = SE3(SO3.from_roll_pitch_yaw(np.pi / 4, np.pi / 2, 3 * np.pi / 2), np.array([[1, -2, 3]]).T)
 
     X_inv = X.inverse()
 
@@ -103,13 +103,13 @@ def test_action_on_vectors():
     unit_z = np.array([[0, 0, 1]]).T
     t = np.array([[3, 2, 1]]).T
 
-    X = SE3((SO3.from_angle_axis(np.pi / 2, np.array([[0, 1, 0]]).T), t))
+    X = SE3(SO3.from_angle_axis(np.pi / 2, np.array([[0, 1, 0]]).T), t)
 
     np.testing.assert_almost_equal(X.action(unit_x), -unit_z + t, 14)
 
 
 def test_action_on_vectors_with_operator():
-    X = SE3((SO3.rot_x(3 * np.pi / 2), np.array([[1, 2, 3]]).T))
+    X = SE3(SO3.rot_x(3 * np.pi / 2), np.array([[1, 2, 3]]).T)
     x = np.array([[-1, 0, 1]]).T
 
     vec_expected = np.array([[0, 3, 3]]).T
@@ -140,7 +140,7 @@ def test_vee():
 def test_adjoint():
     np.testing.assert_equal(SE3().adjoint(), np.identity(6))
 
-    X = SE3((SO3.rot_x(3 * np.pi / 2), np.array([[1, 2, 3]]).T))
+    X = SE3(SO3.rot_x(3 * np.pi / 2), np.array([[1, 2, 3]]).T)
     Adj = X.adjoint()
 
     np.testing.assert_almost_equal(Adj[:3, :3], X.rotation.matrix, 14)
@@ -149,7 +149,7 @@ def test_adjoint():
 
 
 def test_log_with_no_rotation():
-    X = SE3((SO3(), np.array([[-1, 2, -3]]).T))
+    X = SE3(SO3(), np.array([[-1, 2, -3]]).T)
 
     xi_vec = X.Log()
 
@@ -182,14 +182,14 @@ def test_log_of_exp():
 
 
 def test_exp_of_log():
-    X = SE3((SO3.from_roll_pitch_yaw(np.pi / 10, -np.pi / 3, 3 * np.pi / 4), np.array([[3, 2, 1]]).T))
+    X = SE3(SO3.from_roll_pitch_yaw(np.pi / 10, -np.pi / 3, 3 * np.pi / 4), np.array([[3, 2, 1]]).T)
     xi_vec = X.Log()
 
     np.testing.assert_almost_equal(SE3.Exp(xi_vec).to_matrix(), X.to_matrix(), 14)
 
 
 def test_ominus_with_oplus_diff():
-    X = SE3((SO3.from_roll_pitch_yaw(np.pi / 10, -np.pi / 3, 3 * np.pi / 4), np.array([[3, 2, 1]]).T))
+    X = SE3(SO3.from_roll_pitch_yaw(np.pi / 10, -np.pi / 3, 3 * np.pi / 4), np.array([[3, 2, 1]]).T)
 
     rho_vec = np.array([[4, 3, 2]]).T
     theta_vec = 2 * np.pi / 3 * np.array([[2, 1, 1]]).T / np.sqrt(6)
@@ -202,8 +202,8 @@ def test_ominus_with_oplus_diff():
 
 
 def test_oplus_with_ominus_diff():
-    X = SE3((SO3.from_roll_pitch_yaw(np.pi / 10, -np.pi / 3, 3 * np.pi / 4), np.array([[3, 2, 1]]).T))
-    Y = SE3((SO3.from_roll_pitch_yaw(np.pi / 7, np.pi / 3, 4 * np.pi / 6), np.array([[2, 1, 0]]).T))
+    X = SE3(SO3.from_roll_pitch_yaw(np.pi / 10, -np.pi / 3, 3 * np.pi / 4), np.array([[3, 2, 1]]).T)
+    Y = SE3(SO3.from_roll_pitch_yaw(np.pi / 7, np.pi / 3, 4 * np.pi / 6), np.array([[2, 1, 0]]).T)
 
     xi_vec_diff = Y.ominus(X)
     Y_from_X = X.oplus(xi_vec_diff)
@@ -212,7 +212,7 @@ def test_oplus_with_ominus_diff():
 
 
 def test_ominus_with_oplus_diff_with_operators():
-    X = SE3((SO3.from_roll_pitch_yaw(np.pi / 7, np.pi / 3, 4 * np.pi / 6), np.array([[2, 1, 0]]).T))
+    X = SE3(SO3.from_roll_pitch_yaw(np.pi / 7, np.pi / 3, 4 * np.pi / 6), np.array([[2, 1, 0]]).T)
 
     rho_vec = np.array([[1, 2, 3]]).T
     theta_vec = 2 * np.pi / 3 * np.array([[-2, 1, 1]]).T / np.sqrt(6)
@@ -225,7 +225,7 @@ def test_ominus_with_oplus_diff_with_operators():
 
 
 def test_jacobian_inverse():
-    X = SE3((SO3.from_roll_pitch_yaw(np.pi / 7, np.pi / 3, 4 * np.pi / 6), np.array([[2, 1, 0]]).T))
+    X = SE3(SO3.from_roll_pitch_yaw(np.pi / 7, np.pi / 3, 4 * np.pi / 6), np.array([[2, 1, 0]]).T)
 
     J_inv = X.jac_inverse_X_wrt_X()
 
@@ -239,7 +239,7 @@ def test_jacobian_inverse():
 
 
 def test_jacobian_action_Xx_wrt_X():
-    X = SE3((SO3.from_roll_pitch_yaw(np.pi / 8, np.pi / 2, 5 * np.pi / 6), np.array([[2, 1, 1]]).T))
+    X = SE3(SO3.from_roll_pitch_yaw(np.pi / 8, np.pi / 2, 5 * np.pi / 6), np.array([[2, 1, 1]]).T)
     x = np.array([[1, 2, 3]]).T
 
     J_action_X = X.jac_action_Xx_wrt_X(x)
@@ -254,7 +254,7 @@ def test_jacobian_action_Xx_wrt_X():
 
 
 def test_jacobian_action_Xx_wrt_x():
-    X = SE3((SO3.from_roll_pitch_yaw(np.pi / 8, np.pi / 2, 5 * np.pi / 6), np.array([[2, 1, 1]]).T))
+    X = SE3(SO3.from_roll_pitch_yaw(np.pi / 8, np.pi / 2, 5 * np.pi / 6), np.array([[2, 1, 1]]).T)
     x = np.array([[1, 2, 3]]).T
 
     J_action_x = X.jac_action_Xx_wrt_x()
@@ -269,8 +269,8 @@ def test_jacobian_action_Xx_wrt_x():
 
 
 def test_jacobian_composition_XY_wrt_X():
-    X = SE3((SO3.from_roll_pitch_yaw(np.pi / 10, -np.pi / 3, 3 * np.pi / 4), np.array([[3, 2, 1]]).T))
-    Y = SE3((SO3.from_roll_pitch_yaw(np.pi / 7, np.pi / 3, 4 * np.pi / 6), np.array([[2, 1, 0]]).T))
+    X = SE3(SO3.from_roll_pitch_yaw(np.pi / 10, -np.pi / 3, 3 * np.pi / 4), np.array([[3, 2, 1]]).T)
+    Y = SE3(SO3.from_roll_pitch_yaw(np.pi / 7, np.pi / 3, 4 * np.pi / 6), np.array([[2, 1, 0]]).T)
 
     J_comp_X = X.jac_composition_XY_wrt_X(Y)
 
@@ -284,8 +284,8 @@ def test_jacobian_composition_XY_wrt_X():
 
 
 def test_jacobian_composition_XY_wrt_Y():
-    X = SE3((SO3.from_roll_pitch_yaw(np.pi / 10, -np.pi / 3, 3 * np.pi / 4), np.array([[3, 2, 1]]).T))
-    Y = SE3((SO3.from_roll_pitch_yaw(np.pi / 7, np.pi / 3, 4 * np.pi / 6), np.array([[2, 1, 0]]).T))
+    X = SE3(SO3.from_roll_pitch_yaw(np.pi / 10, -np.pi / 3, 3 * np.pi / 4), np.array([[3, 2, 1]]).T)
+    Y = SE3(SO3.from_roll_pitch_yaw(np.pi / 7, np.pi / 3, 4 * np.pi / 6), np.array([[2, 1, 0]]).T)
 
     J_comp_Y = X.jac_composition_XY_wrt_Y()
 
@@ -328,7 +328,7 @@ def test_jacobian_left():
 
 
 def test_jacobian_right_inverse():
-    X = SE3((SO3.from_roll_pitch_yaw(np.pi / 8, np.pi / 2, 5 * np.pi / 6), np.array([[2, 1, 1]]).T))
+    X = SE3(SO3.from_roll_pitch_yaw(np.pi / 8, np.pi / 2, 5 * np.pi / 6), np.array([[2, 1, 1]]).T)
     xi_vec = X.Log()
 
     J_r_inv = SE3.jac_right_inverse(xi_vec)
@@ -344,7 +344,7 @@ def test_jacobian_right_inverse():
 
 
 def test_jacobian_left_inverse():
-    X = SE3((SO3.from_roll_pitch_yaw(np.pi / 8, np.pi / 2, 5 * np.pi / 6), np.array([[2, 1, 1]]).T))
+    X = SE3(SO3.from_roll_pitch_yaw(np.pi / 8, np.pi / 2, 5 * np.pi / 6), np.array([[2, 1, 1]]).T)
     xi_vec = X.Log()
 
     J_l_inv = SE3.jac_left_inverse(xi_vec)
@@ -362,7 +362,7 @@ def test_jacobian_left_inverse():
 
 
 def test_jacobian_X_oplus_tau_wrt_X():
-    X = SE3((SO3.from_roll_pitch_yaw(np.pi / 10, -np.pi / 3, 3 * np.pi / 4), np.array([[3, 2, 1]]).T))
+    X = SE3(SO3.from_roll_pitch_yaw(np.pi / 10, -np.pi / 3, 3 * np.pi / 4), np.array([[3, 2, 1]]).T)
     rho_vec = np.array([[2, 1, 2]]).T
     theta_vec = np.pi / 4 * np.array([[-1, -1, -1]]).T / np.sqrt(3)
     xi_vec = np.vstack((rho_vec, theta_vec))
@@ -379,7 +379,7 @@ def test_jacobian_X_oplus_tau_wrt_X():
 
 
 def test_jacobian_X_oplus_tau_wrt_tau():
-    X = SE3((SO3.from_roll_pitch_yaw(np.pi / 8, np.pi / 2, 5 * np.pi / 6), np.array([[2, 1, 1]]).T))
+    X = SE3(SO3.from_roll_pitch_yaw(np.pi / 8, np.pi / 2, 5 * np.pi / 6), np.array([[2, 1, 1]]).T)
     rho_vec = np.array([[2, 1, 2]]).T
     theta_vec = np.pi / 4 * np.array([[-1, -1, -1]]).T / np.sqrt(3)
     xi_vec = np.vstack((rho_vec, theta_vec))
@@ -396,8 +396,8 @@ def test_jacobian_X_oplus_tau_wrt_tau():
 
 
 def test_jacobian_Y_ominus_X_wrt_X():
-    X = SE3((SO3.from_roll_pitch_yaw(np.pi / 8, np.pi / 2, 5 * np.pi / 6), np.array([[2, 1, 1]]).T))
-    Y = SE3((SO3.from_roll_pitch_yaw(np.pi / 7, np.pi / 3, 4 * np.pi / 6), np.array([[2, 1, 0]]).T))
+    X = SE3(SO3.from_roll_pitch_yaw(np.pi / 8, np.pi / 2, 5 * np.pi / 6), np.array([[2, 1, 1]]).T)
+    Y = SE3(SO3.from_roll_pitch_yaw(np.pi / 7, np.pi / 3, 4 * np.pi / 6), np.array([[2, 1, 0]]).T)
 
     J_ominus_X = Y.jac_Y_ominus_X_wrt_X(X)
 
@@ -411,8 +411,8 @@ def test_jacobian_Y_ominus_X_wrt_X():
 
 
 def test_jacobian_Y_ominus_X_wrt_Y():
-    X = SE3((SO3.from_roll_pitch_yaw(np.pi / 8, np.pi / 2, 5 * np.pi / 6), np.array([[2, 1, 1]]).T))
-    Y = SE3((SO3.from_roll_pitch_yaw(np.pi / 7, np.pi / 3, 4 * np.pi / 6), np.array([[2, 1, 0]]).T))
+    X = SE3(SO3.from_roll_pitch_yaw(np.pi / 8, np.pi / 2, 5 * np.pi / 6), np.array([[2, 1, 1]]).T)
+    Y = SE3(SO3.from_roll_pitch_yaw(np.pi / 7, np.pi / 3, 4 * np.pi / 6), np.array([[2, 1, 0]]).T)
 
     J_ominus_Y = Y.jac_Y_ominus_X_wrt_Y(X)
 
