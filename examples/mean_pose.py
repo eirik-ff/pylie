@@ -22,7 +22,7 @@ def draw_random_poses(mean_pose, cov_pose, n=100):
 
     # Perturb the mean pose with each of the random tangent space vectors.
     for i in range(n):
-        poses[i] = poses[i] + random_xis[0:, [i]]
+        poses[i] = poses[i] + random_xis[0:, i]
 
     return poses
 
@@ -41,7 +41,7 @@ def compute_mean_pose(poses, conv_thresh=1e-14, max_iters=20):
 
     for it in range(max_iters):
         # Compute the mean tangent vector in the tangent space at the current estimate.
-        mean_xi = np.zeros((6, 1))
+        mean_xi = np.zeros((6,))
         for pose in poses:
             mean_xi = mean_xi + (pose - mean_pose)
         mean_xi = mean_xi / num_poses

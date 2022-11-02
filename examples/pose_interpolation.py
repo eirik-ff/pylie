@@ -6,6 +6,10 @@ from pylie import SO3, SE3
 
 """Example - Linear interpolation of poses on the manifold"""
 
+def tuple_to_visgeom(tup: tuple) -> tuple:
+    R, t = tup
+    return (R, t[:, None])
+
 
 def interpolate_lie_element(alpha, X_1, X_2):
     """Perform linear interpolation on the manifold
@@ -19,10 +23,10 @@ def interpolate_lie_element(alpha, X_1, X_2):
 
 def pose_interpolation():
     # Define the first pose.
-    T_1 = SE3((SO3.from_roll_pitch_yaw(np.pi / 4, 0, np.pi / 2), np.array([[1, 1, 1]]).T))
+    T_1 = SE3(SO3.from_roll_pitch_yaw(np.pi / 4, 0, np.pi / 2), np.array([1, 1, 1]))
 
     # Define the second pose.
-    T_2 = SE3((SO3.from_roll_pitch_yaw(-np.pi / 6, np.pi / 4, np.pi / 2), np.array([[1, 4, 2]]).T))
+    T_2 = SE3(SO3.from_roll_pitch_yaw(-np.pi / 6, np.pi / 4, np.pi / 2), np.array([1, 4, 2]))
 
     # Plot the interpolation.
     # Use Qt 5 backend in visualisation.
@@ -36,13 +40,13 @@ def pose_interpolation():
     ax.set_zlabel('z')
 
     # Plot the poses.
-    vg.plot_pose(ax, T_1.to_tuple())
-    vg.plot_pose(ax, T_2.to_tuple())
+    vg.plot_pose(ax, tuple_to_visgeom(T_1.to_tuple()))
+    vg.plot_pose(ax, tuple_to_visgeom(T_2.to_tuple()))
 
     # Plot the interpolated poses.
     for alpha in np.linspace(0, 1, 20):
         T = interpolate_lie_element(alpha, T_1, T_2)
-        vg.plot_pose(ax, T.to_tuple(), alpha=0.1)
+        vg.plot_pose(ax, tuple_to_visgeom(T.to_tuple()), alpha=0.1)
 
     # Show figure.
     vg.plot.axis_equal(ax)

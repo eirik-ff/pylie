@@ -7,14 +7,18 @@ from matplotlib.widgets import Slider, Button, RadioButtons, CheckButtons
 
 """Example - Visualizes different perturbations and the path they take along the manifold"""
 
+def tuple_to_visgeom(tup: tuple) -> tuple:
+    R, t = tup
+    return (R, t[:, None])
+
 
 def vis_perturbations():
     # Define the fixed frame "a" relative to the world frame "w".
-    T_w_a = SE3((SO3.from_roll_pitch_yaw(5*np.pi/4, 0, np.pi/2), np.array([[2, 2, 2]]).T))
+    T_w_a = SE3(SO3.from_roll_pitch_yaw(5*np.pi/4, 0, np.pi/2), np.array([2, 2, 2]))
 
     # The vector xi represents a perturbation on the tangent vector space.
     # We change the elements in this vector by using the sliders.
-    xi_vec = np.zeros([6, 1])
+    xi_vec = np.zeros([6,])
 
     # We can choose to draw an oriented box around the perturbed pose,
     # and we can draw the trajectory along the manifold (by interpolation).
@@ -86,12 +90,12 @@ def vis_perturbations():
 
 
 def draw_exp(ax, xi_vec, draw_options):
-    vg.plot_pose(ax, SE3().to_tuple(), scale=1, text='$\mathcal{F}_w$')
+    vg.plot_pose(ax, tuple_to_visgeom(SE3().to_tuple()), scale=1, text='$\mathcal{F}_w$')
     T_l = SE3.Exp(xi_vec)
-    vg.plot_pose(ax, T_l.to_tuple()) #, text=r'$\mathrm{Exp}(\mathbf{\xi})$')
+    vg.plot_pose(ax, tuple_to_visgeom(T_l.to_tuple())) #, text=r'$\mathrm{Exp}(\mathbf{\xi})$')
 
     if draw_options['Draw box']:
-        box_points = vg.utils.generate_box(pose=T_l.to_tuple(), scale=1)
+        box_points = vg.utils.generate_box(pose=tuple_to_visgeom(T_l.to_tuple()), scale=1)
         vg.utils.plot_as_box(ax, box_points)
 
     if draw_options['Draw manifold\ntrajectory']:
@@ -99,14 +103,14 @@ def draw_exp(ax, xi_vec, draw_options):
 
 
 def draw_right_perturbation(ax, T_w_a, xi_vec, draw_options):
-    vg.plot_pose(ax, SE3().to_tuple(), scale=1, text='$\mathcal{F}_w$')
-    vg.plot_pose(ax, T_w_a.to_tuple(), scale=1, text='$\mathcal{F}_a$')
+    vg.plot_pose(ax, tuple_to_visgeom(SE3().to_tuple()), scale=1, text='$\mathcal{F}_w$')
+    vg.plot_pose(ax, tuple_to_visgeom(T_w_a.to_tuple()), scale=1, text='$\mathcal{F}_a$')
     T_r = T_w_a @ SE3.Exp(xi_vec)
 
-    vg.plot_pose(ax, T_r.to_tuple()) #, text=r'$\mathbf{T}_{wa} \circ \mathrm{Exp}(\mathbf{\xi})$')
+    vg.plot_pose(ax, tuple_to_visgeom(T_r.to_tuple())) #, text=r'$\mathbf{T}_{wa} \circ \mathrm{Exp}(\mathbf{\xi})$')
 
     if draw_options['Draw box']:
-        box_points = vg.utils.generate_box(pose=T_r.to_tuple(), scale=1)
+        box_points = vg.utils.generate_box(pose=tuple_to_visgeom(T_r.to_tuple()), scale=1)
         vg.utils.plot_as_box(ax, box_points)
 
     if draw_options['Draw manifold\ntrajectory']:
@@ -114,13 +118,13 @@ def draw_right_perturbation(ax, T_w_a, xi_vec, draw_options):
 
 
 def draw_left_perturbation(ax, T_w_a, xi_vec, draw_options):
-    vg.plot_pose(ax, SE3().to_tuple(), scale=1, text='$\mathcal{F}_w$')
-    vg.plot_pose(ax, T_w_a.to_tuple(), scale=1, text='$\mathcal{F}_a$')
+    vg.plot_pose(ax, tuple_to_visgeom(SE3().to_tuple()), scale=1, text='$\mathcal{F}_w$')
+    vg.plot_pose(ax, tuple_to_visgeom(T_w_a.to_tuple()), scale=1, text='$\mathcal{F}_a$')
     T_l = SE3.Exp(xi_vec) @ T_w_a
-    vg.plot_pose(ax, T_l.to_tuple()) #, text=r'$\mathrm{Exp}(\mathbf{\xi}) \circ \mathbf{T}_{wa}$')
+    vg.plot_pose(ax, tuple_to_visgeom(T_l.to_tuple())) #, text=r'$\mathrm{Exp}(\mathbf{\xi}) \circ \mathbf{T}_{wa}$')
 
     if draw_options['Draw box']:
-        box_points = vg.utils.generate_box(pose=T_l.to_tuple(), scale=1)
+        box_points = vg.utils.generate_box(pose=tuple_to_visgeom(T_l.to_tuple()), scale=1)
         vg.utils.plot_as_box(ax, box_points)
 
     if draw_options['Draw manifold\ntrajectory']:
@@ -130,7 +134,7 @@ def draw_left_perturbation(ax, T_w_a, xi_vec, draw_options):
 def draw_interpolated(ax, T_1, xi, T_2):
     for alpha in np.linspace(0, 1, 20):
         T = T_1 @ SE3.Exp(alpha * xi) @ T_2
-        vg.plot_pose(ax, T.to_tuple(), alpha=0.1)
+        vg.plot_pose(ax, tuple_to_visgeom(T.to_tuple()), alpha=0.1)
 
 
 if __name__ == "__main__":

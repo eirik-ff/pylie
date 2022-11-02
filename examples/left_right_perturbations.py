@@ -6,13 +6,17 @@ from pylie import SO3, SE3
 
 """Example - Perturbations on the left and on the right of an element"""
 
+def tuple_to_visgeom(tup: tuple) -> tuple:
+    R, t = tup
+    return (R, t[:, None])
+
 
 def left_right_perturbations():
     # Define the pose of a camera.
-    T_w_c = SE3((SO3.from_roll_pitch_yaw(5*np.pi/4, 0, np.pi/2), np.array([[2, 2, 2]]).T))
+    T_w_c = SE3(SO3.from_roll_pitch_yaw(5*np.pi/4, 0, np.pi/2), np.array([2, 2, 2]))
 
     # Perturbation.
-    xsi_vec = np.array([[2, 0, 0, 0, 0, 0]]).T
+    xsi_vec = np.array([2, 0, 0, 0, 0, 0])
 
     # Perform the perturbation on the right (locally).
     T_r = T_w_c @ SE3.Exp(xsi_vec)
@@ -38,14 +42,14 @@ def left_right_perturbations():
     ax.set_zlabel('z')
 
     # Plot frames.
-    to_right = np.hstack((T_w_c.translation, T_r.translation))
+    to_right = np.vstack((T_w_c.translation, T_r.translation)).T
     ax.plot(to_right[0, :], to_right[1, :], to_right[2, :], 'k:')
-    to_left = np.hstack((T_w_c.translation, T_l.translation))
+    to_left = np.vstack((T_w_c.translation, T_l.translation)).T
     ax.plot(to_left[0, :], to_left[1, :], to_left[2, :], 'k:')
-    vg.plot_pose(ax, SE3().to_tuple(), text='$\mathcal{F}_w$')
-    vg.plot_pose(ax, T_w_c.to_tuple(), text='$\mathcal{F}_c$')
-    vg.plot_pose(ax, T_r.to_tuple(), text=r'$\mathbf{T}_{wc} \circ \mathrm{Exp}(\mathbf{\xi})$')
-    vg.plot_pose(ax, T_l.to_tuple(), text=r'$\mathrm{Exp}(\mathbf{\xi}) \circ \mathbf{T}_{wc}$')
+    vg.plot_pose(ax, tuple_to_visgeom(SE3().to_tuple()), text='$\mathcal{F}_w$')
+    vg.plot_pose(ax, tuple_to_visgeom(T_w_c.to_tuple()), text='$\mathcal{F}_c$')
+    vg.plot_pose(ax, tuple_to_visgeom(T_r.to_tuple()), text=r'$\mathbf{T}_{wc} \circ \mathrm{Exp}(\mathbf{\xi})$')
+    vg.plot_pose(ax, tuple_to_visgeom(T_l.to_tuple()), text=r'$\mathrm{Exp}(\mathbf{\xi}) \circ \mathbf{T}_{wc}$')
 
     # Show figure.
     vg.plot.axis_equal(ax)
