@@ -1,3 +1,8 @@
+# https://stackoverflow.com/questions/33533148/how-do-i-type-hint-a-method-with-the-type-of-the-enclosing-class
+from __future__ import annotations
+import numpy.typing as npt
+from typing import Tuple
+
 import numpy as np
 from pylie import SO3
 
@@ -15,7 +20,7 @@ class SE3:
         self.translation: npt.NDArray = translation
 
     @classmethod
-    def from_matrix(cls, T):
+    def from_matrix(cls, T: npt.NDArray) -> SE3:
         """Construct an SE(3) element corresponding from a pose matrix.
         The rotation is fitted to the closest rotation matrix, the bottom row of the 4x4 matrix is ignored.
 
@@ -23,10 +28,10 @@ class SE3:
         :return: The SE(3) element.
         """
 
-        return cls((SO3(T[:3, :3]), T[:3, 3:4]))
+        return cls(SO3(T[:3, :3]), T[:3, 3:4])
 
     @property
-    def rotation(self):
+    def rotation(self) -> SO3:
         """ The so3 rotation, an element of SO(3)
 
         :return: An SO3 object corresponding to the orientation.
@@ -34,7 +39,7 @@ class SE3:
         return self._rotation
 
     @rotation.setter
-    def rotation(self, so3):
+    def rotation(self, so3: SO3):
         """Sets the rotation
 
         :param so3: An SO3
@@ -45,7 +50,7 @@ class SE3:
         self._rotation = so3
 
     @property
-    def translation(self):
+    def translation(self) -> npt.NDArray:
         """The translation, a 3D column vector
 
         :return: A 3D column vector corresponding to the translation.
@@ -53,7 +58,7 @@ class SE3:
         return self._translation
 
     @translation.setter
-    def translation(self, t):
+    def translation(self, t: npt.NDArray):
         """Sets the translation
 
         :param t: 3D column vector
@@ -63,7 +68,7 @@ class SE3:
 
         self._translation = t
 
-    def to_matrix(self):
+    def to_matrix(self) -> npt.NDArray:
         """Return the matrix representation of this pose.
 
         :return: 4x4 SE(3) matrix
@@ -73,30 +78,30 @@ class SE3:
         T[0:3, 3] = self.translation.T
         return T
 
-    def to_tuple(self):
+    def to_tuple(self) -> Tuple[SO3, npt.NDArray]:
         """Return the tuple representation of this pose
 
         :return: (R (3x3 matrix), t (3D column vector)
         """
         return (self.rotation.matrix, self.translation)
 
-    def compose(X, Y):
+    def compose(X, Y: SE3) -> SE3:
         """Compose this element X with another element Y on the right
 
         :param Y: The other Pose3 element
         :return: This element X composed with Y
         """
-        return SE3((X.rotation @ Y.rotation, X.rotation * Y.translation + X.translation))
+        return SE3(X.rotation @ Y.rotation, X.rotation * Y.translation + X.translation)
 
-    def inverse(self):
+    def inverse(self) -> SE3:
         """Compute the inverse of the current element X.
 
         :return: The inverse of the current element.
         """
         rot_inv = self.rotation.inverse()
-        return SE3((rot_inv, -(rot_inv * self.translation)))
+        return SE3(rot_inv, -(rot_inv * self.translation))
 
-    def action(self, x):
+    def action(self, x: npt.NDArray) -> npt.NDArray:
         """Perform the action of the SE(3) element on the 3D column vector x.
 
         :param x: 3D column vector to be transformed (or a matrix of 3D column vectors)
@@ -104,7 +109,7 @@ class SE3:
         """
         return self.rotation * x + self.translation
 
-    def adjoint(self):
+    def adjoint(self) -> npt.NDArray:
         """The adjoint at the element.
         :return: The adjoint, a 6x6 matrix.
         """
@@ -113,7 +118,7 @@ class SE3:
         return np.block([[R, SO3.hat(self.translation) @ R],
                          [np.zeros((3, 3)), R]])
 
-    def oplus(X, xi_vec):
+    def oplus(X, xi_vec: npt.NDArray) -> SE3:
         """Computes the right perturbation of Exp(xi_vec) on the element X.
 
         :param xi_vec: The tangent space vector, a 6D column vector xi_vec = [rho_vec, theta_vec]^T.
@@ -124,7 +129,7 @@ class SE3:
 
         return X @ SE3.Exp(xi_vec)
 
-    def ominus(Y, X):
+    def ominus(Y, X: SE3) -> npt.NDArray:
         """Computes the tangent space vector at X between X and this element Y.
 
         :param X: The other element
@@ -134,7 +139,7 @@ class SE3:
             raise TypeError('Argument must be an SE3')
         return (X.inverse() @ Y).Log()
 
-    def Log(self):
+    def Log(self) -> npt.NDArray:
         """Computes the tangent space vector xi_vec at the current element X.
 
         :return: The tangent space vector xi_vec = [rho_vec, theta_vec]^T.
@@ -157,14 +162,14 @@ class SE3:
 
         return np.vstack((rho_vec, theta_vec))
 
-    def jac_inverse_X_wrt_X(X):
+    def jac_inverse_X_wrt_X(X) -> npt.NDArray:
         """Computes the Jacobian of the inverse operation X.inverse() with respect to the element X.
 
         :return: The Jacobian (6x6 matrix)
         """
         return -X.adjoint()
 
-    def jac_action_Xx_wrt_X(X, x):
+    def jac_action_Xx_wrt_X(X, x) -> npt.NDArray:
         """Computes the Jacobian of the action X.action(x) with respect to the element X.
 
         :param x: The 3D column vector x.
@@ -172,14 +177,14 @@ class SE3:
         """
         return np.block([[X.rotation.matrix, -(X.rotation.matrix @ SO3.hat(x))]])
 
-    def jac_action_Xx_wrt_x(X):
+    def jac_action_Xx_wrt_x(X) -> npt.NDArray:
         """Computes the Jacobian of the action X.action(x) with respect to the element X.
 
         :return: The Jacobian (3x3 matrix)
         """
         return X.rotation.matrix
 
-    def jac_Y_ominus_X_wrt_X(Y, X):
+    def jac_Y_ominus_X_wrt_X(Y, X: SE3) -> npt.NDArray:
         """Compute the Jacobian of Y.ominus(X) with respect to the element X.
 
         :param X: The SE(3) element X.
@@ -187,7 +192,7 @@ class SE3:
         """
         return -SE3.jac_left_inverse(Y - X)
 
-    def jac_Y_ominus_X_wrt_Y(Y, X):
+    def jac_Y_ominus_X_wrt_Y(Y, X: SE3) -> npt.NDArray:
         """Compute the Jacobian of Y.ominus(X) with respect to the element Y.
 
         :param X: The SE(3) element X.
@@ -195,7 +200,7 @@ class SE3:
         """
         return SE3.jac_right_inverse(Y - X)
 
-    def __mul__(self, other):
+    def __mul__(self, other: npt.NDArray) -> npt.NDArray:
         """Multiplication operator performs action on vectors.
 
         :param other: 3D column vector, or a matrix of 3D column vectors.
@@ -207,7 +212,7 @@ class SE3:
         else:
             raise TypeError('Argument must be a matrix of 3D column vectors')
 
-    def __matmul__(self, other):
+    def __matmul__(self, other: SE3) -> SE3:
         """Matrix multiplication operator performs composition on elements of SE(3).
 
         :param other: Other SE3
@@ -219,7 +224,7 @@ class SE3:
         else:
             raise TypeError('Argument must be an SE3')
 
-    def __add__(self, xi_vec):
+    def __add__(self, xi_vec: npt.NDArray) -> SE3:
         """Add operator performs the "oplus" operation on the element X.
 
         :param xi_vec: The tangent space vector, a 6D column vector xi_vec = [rho_vec, theta_vec]^T..
@@ -227,7 +232,7 @@ class SE3:
         """
         return self.oplus(xi_vec)
 
-    def __sub__(self, X):
+    def __sub__(self, X: SE3) -> npt.NDArray:
         """Subtract operator performs the "ominus" operation at X between X and this element Y.
 
         :param X: The other element
@@ -235,7 +240,7 @@ class SE3:
         """
         return self.ominus(X)
 
-    def __len__(self):
+    def __len__(self) -> int:
         """Length operator returns the dimension of the tangent vector space,
         which is equal to the number of degrees of freedom (DOF).
 
@@ -243,14 +248,14 @@ class SE3:
         """
         return 6
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Formal string representation of the object.
 
         :return: The formal representation as a string
         """
         return "SE3({\n" + repr(self.rotation) + ",\n" + repr(self.translation) + "\n})"
 
-    def __str__(self):
+    def __str__(self) -> str:
         """Informal string representation of the object
         prints the matrix representation.
 
@@ -259,7 +264,7 @@ class SE3:
         return str(self.to_matrix())
 
     @staticmethod
-    def hat(xi_vec):
+    def hat(xi_vec: npt.NDArray) -> npt.NDArray:
         """Performs the hat operator on the tangent space vector xi_vec,
         which returns the corresponding Lie Algebra matrix xi_hat.
 
@@ -270,7 +275,7 @@ class SE3:
                          [np.zeros((1, 4))]])
 
     @staticmethod
-    def vee(xi_hat):
+    def vee(xi_hat: npt.NDArray) -> npt.NDArray:
         """Performs the vee operator on the Lie Algebra matrix xi_hat,
         which returns the corresponding tangent space vector.
 
@@ -280,7 +285,7 @@ class SE3:
         return np.vstack((xi_hat[:3, 3:4], SO3.vee(xi_hat[:3, :3])))
 
     @staticmethod
-    def Exp(xi_vec):
+    def Exp(xi_vec: npt.NDArray) -> npt.NDArray:
         """Computes the Exp-map on the Lie algebra vector xi_vec,
         which transfers it to the corresponding Lie group element.
 
@@ -298,7 +303,7 @@ class SE3:
                 ((theta - np.sin(theta)) / (theta ** 3)) * np.linalg.matrix_power(xi_hat, 3))
 
     @staticmethod
-    def jac_composition_XY_wrt_X(Y):
+    def jac_composition_XY_wrt_X(Y: SE3) -> npt.NDArray:
         """Computes the Jacobian of the composition X.compose(Y) with respect to the element X.
 
         :param Y: SE3 element Y
@@ -309,7 +314,7 @@ class SE3:
                          [np.zeros((3, 3)), R_Y_inv]])
 
     @staticmethod
-    def jac_composition_XY_wrt_Y():
+    def jac_composition_XY_wrt_Y() -> npt.NDArray:
         """Computes the Jacobian of the composition X.compose(Y) with respect to the element Y.
 
         :return: The Jacobian (6x6 identity matrix)
@@ -317,7 +322,7 @@ class SE3:
         return np.identity(6)
 
     @staticmethod
-    def _Q_left(xi_vec):
+    def _Q_left(xi_vec: npt.NDArray) -> npt.NDArray:
         rho_vec = xi_vec[:3]
         theta_vec = xi_vec[3:]
         theta = np.linalg.norm(theta_vec)
@@ -338,11 +343,11 @@ class SE3:
                (theta_hat @ rho_hat @ theta_hat @ theta_hat + theta_hat @ theta_hat @ rho_hat @ theta_hat)
 
     @staticmethod
-    def _Q_right(xi_vec):
+    def _Q_right(xi_vec: npt.NDArray) -> npt.NDArray:
         return SE3._Q_left(-xi_vec)
 
     @staticmethod
-    def jac_right(xi_vec):
+    def jac_right(xi_vec: npt.NDArray) -> npt.NDArray:
         """Compute the right derivative of Exp(xi_vec) with respect to xi_vec.
 
         :param xi_vec: The tangent space 6D column vector xi_vec = [rho_vec, theta_vec]^T.
@@ -357,7 +362,7 @@ class SE3:
                          [np.zeros((3, 3)), J_r_theta]])
 
     @staticmethod
-    def jac_left(xi_vec):
+    def jac_left(xi_vec: npt.NDArray) -> npt.NDArray:
         """Compute the left derivative of Exp(xi_vec) with respect to xi_vec.
 
         :param xi_vec: The tangent space 6D column vector xi_vec = [rho_vec, theta_vec]^T.
@@ -372,7 +377,7 @@ class SE3:
                          [np.zeros((3, 3)), J_l_theta]])
 
     @staticmethod
-    def jac_right_inverse(xi_vec):
+    def jac_right_inverse(xi_vec: npt.NDArray) -> npt.NDArray:
         """Compute the right derivative of Log(X) with respect to X for xi_vec = Log(X).
 
         :param xi_vec: The tangent space 6D column vector xi_vec = [rho_vec, theta_vec]^T.
@@ -387,7 +392,7 @@ class SE3:
                          [np.zeros((3, 3)), J_r_inv_theta]])
 
     @staticmethod
-    def jac_left_inverse(xi_vec):
+    def jac_left_inverse(xi_vec: npt.NDArray) -> npt.NDArray:
         """Compute the left derivative of Log(X) with respect to X for xi_vec = Log(X).
 
         :param xi_vec: The tangent space 6D column vector xi_vec = [rho_vec, theta_vec]^T.
@@ -402,7 +407,7 @@ class SE3:
                          [np.zeros((3, 3)), J_l_inv_theta]])
 
     @staticmethod
-    def jac_X_oplus_tau_wrt_X(xi_vec):
+    def jac_X_oplus_tau_wrt_X(xi_vec: npt.NDArray) -> npt.NDArray:
         """Compute the Jacobian of X.oplus(tau) with respect to the element X
 
         :param xi_vec: The tangent space 6D column vector xi_vec = [rho_vec, theta_vec]^T.
@@ -411,7 +416,7 @@ class SE3:
         return SE3.Exp(xi_vec).inverse().adjoint()
 
     @staticmethod
-    def jac_X_oplus_tau_wrt_tau(xi_vec):
+    def jac_X_oplus_tau_wrt_tau(xi_vec: npt.NDArray) -> npt.NDArray:
         """Compute the Jacobian of X.oplus(tau) with respect to the tangent space vector tau
 
         :param xi_vec: The tangent space 6D column vector xi_vec = [rho_vec, theta_vec]^T.

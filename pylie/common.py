@@ -1,7 +1,8 @@
 import numpy as np
+import numpy.typing as npt
 
 
-def to_rotation_matrix(R):
+def to_rotation_matrix(R: npt.NDArray) -> npt.NDArray:
     """Fits an arbitrary nxn matrix to the closest element on SO(n)
 
     See https://en.wikipedia.org/wiki/Orthogonal_Procrustes_problem

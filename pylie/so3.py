@@ -1,3 +1,8 @@
+# https://stackoverflow.com/questions/33533148/how-do-i-type-hint-a-method-with-the-type-of-the-enclosing-class
+from __future__ import annotations
+import numpy.typing as npt
+from typing import Tuple, Union
+
 import numpy as np
 from pylie.common import to_rotation_matrix
 
@@ -5,7 +10,7 @@ from pylie.common import to_rotation_matrix
 class SO3:
     """Represents an element of the SO(3) Lie group (rotations in 3D)."""
 
-    def __init__(self, R=np.identity(3)):
+    def __init__(self, R: npt.NDArray = np.identity(3)):
         """Constructs an SO(3) element.
         The default is the identity element.
         Other 3x3 matrices R are fitted to the closest matrix on SO(3).
@@ -15,14 +20,14 @@ class SO3:
         if R is self.__init__.__defaults__[0]:
             # Default argument is identity.
             # Set property directly, since guaranteed SO(3).
-            self._matrix = np.identity(3)
+            self.matrix = np.identity(3)
         else:
             # Argument should be some 3x3 matrix.
             # Fit to SO(3).
             self.matrix = R
 
     @classmethod
-    def from_angle_axis(cls, angle, axis):
+    def from_angle_axis(cls, angle: float, axis: npt.NDArray) -> SO3:
         """Construct an SO(3) element corresponding to a rotation around a specified axis.
 
         :param angle: Rotation angle in radians.
@@ -35,7 +40,7 @@ class SO3:
         return so3
 
     @classmethod
-    def rot_x(cls, angle):
+    def rot_x(cls, angle: float) -> SO3:
         """Construct an SO(3) element corresponding to a rotation around the x-axis.
 
         :param angle: Rotation angle in radians.
@@ -44,7 +49,7 @@ class SO3:
         return cls.from_angle_axis(angle, np.array([[1, 0, 0]]).T)
 
     @classmethod
-    def rot_y(cls, angle):
+    def rot_y(cls, angle: float) -> SO3:
         """Construct an SO(3) element corresponding to a rotation around the y-axis.
 
         :param angle: Rotation angle in radians.
@@ -53,7 +58,7 @@ class SO3:
         return cls.from_angle_axis(angle, np.array([[0, 1, 0]]).T)
 
     @classmethod
-    def rot_z(cls, angle):
+    def rot_z(cls, angle: float) -> SO3:
         """Construct an SO(3) element corresponding to a rotation around the z-axis.
 
         :param angle: Rotation angle in radians.
@@ -62,7 +67,7 @@ class SO3:
         return cls.from_angle_axis(angle, np.array([[0, 0, 1]]).T)
 
     @classmethod
-    def from_roll_pitch_yaw(cls, roll, pitch, yaw):
+    def from_roll_pitch_yaw(cls, roll: float, pitch: float, yaw: float) -> SO3:
         """Construct an SO(3) element from Z-Y-X Euler angles.
 
         :param roll: Rotation angle around the x-axis in radians.
@@ -76,7 +81,7 @@ class SO3:
         return so3
 
     @property
-    def matrix(self):
+    def matrix(self) -> npt.NDArray:
         """ The matrix representation of the SO(3) element
 
         :return: 3x3 rotation matrix corresponding to this SO(3) element.
@@ -84,7 +89,7 @@ class SO3:
         return self._matrix
 
     @matrix.setter
-    def matrix(self, R):
+    def matrix(self, R: npt.NDArray):
         """Sets the matrix to the closest element on SO(3)
 
         :param R: 3x3 matrix
@@ -92,7 +97,7 @@ class SO3:
         # This is slower than necessary, but ensures correct representation.
         self._matrix = to_rotation_matrix(R)
 
-    def Log(self, split_angle_axis=False):
+    def Log(self, split_angle_axis: bool = False) -> Union[Tuple[float, npt.NDArray], npt.NDArray]:
         """Computes the tangent space vector at the current element X.
 
         :param split_angle_axis: Split tangent space vector into angle-axis fields? (optional)
@@ -113,7 +118,7 @@ class SO3:
         else:
             return theta * u_vec
 
-    def inverse(self):
+    def inverse(self) -> SO3:
         """Compute the inverse of the current element X.
 
         :return: The inverse of the current element.
@@ -123,7 +128,7 @@ class SO3:
         X_inv._matrix = self.matrix.T
         return X_inv
 
-    def action(self, x):
+    def action(self, x: npt.NDArray) -> npt.NDArray:
         """Perform the action of the SO(3) element on the 3D column vector x.
 
         :param x: 3D column vector to be transformed (or a matrix of 3D column vectors)
@@ -131,7 +136,7 @@ class SO3:
         """
         return self.matrix @ x
 
-    def compose(self, Y):
+    def compose(self, Y: SO3) -> SO3:
         """Compose this element with another element on the right
 
         :param Y: The other SO3 element
@@ -139,13 +144,13 @@ class SO3:
         """
         return SO3(self.matrix @ Y.matrix)
 
-    def adjoint(self):
+    def adjoint(self) -> npt.NDArray:
         """The adjoint at the element.
         :return: The adjoint, a 3x3 rotation matrix.
         """
         return self.matrix
 
-    def oplus(self, theta_vec):
+    def oplus(self, theta_vec: npt.NDArray) -> SO3:
         """Computes the right perturbation of Exp(theta_vec) on the element X.
 
         :param theta_vec: The tangent space vector, a 3D column vector.
@@ -156,7 +161,7 @@ class SO3:
 
         return self @ SO3.Exp(theta_vec)
 
-    def ominus(self, X):
+    def ominus(self, X: SO3) -> npt.NDArray:
         """Computes the tangent space vector at X between X and this element Y.
 
         :param X: The other element
@@ -166,14 +171,14 @@ class SO3:
             raise TypeError('Argument must be an SO3')
         return (X.inverse() @ self).Log()
 
-    def jac_inverse_X_wrt_X(X):
+    def jac_inverse_X_wrt_X(X) -> npt.NDArray:
         """Computes the Jacobian of the inverse operation X.inverse() with respect to the element X.
 
         :return: The Jacobian (3x3 matrix)
         """
         return -X.matrix
 
-    def jac_action_Xx_wrt_X(X, x):
+    def jac_action_Xx_wrt_X(X, x: npt.NDArray) -> npt.NDArray:
         """Computes the Jacobian of the action X.action(x) with respect to the element X.
 
         :param x: The 3D column vector x.
@@ -181,14 +186,14 @@ class SO3:
         """
         return -X.matrix @ SO3.hat(x)
 
-    def jac_action_Xx_wrt_x(X):
+    def jac_action_Xx_wrt_x(X) -> npt.NDArray:
         """Computes the Jacobian of the action X.action(x) with respect to the element X.
 
         :return: The Jacobian (3x3 matrix)
         """
         return X.matrix
 
-    def jac_Y_ominus_X_wrt_X(Y, X):
+    def jac_Y_ominus_X_wrt_X(Y, X: SO3) -> npt.NDArray:
         """Compute the Jacobian of Y.ominus(X) with respect to the element X.
 
         :param X: The SO(3) element X.
@@ -196,7 +201,7 @@ class SO3:
         """
         return -SO3.jac_left_inverse(Y - X)
 
-    def jac_Y_ominus_X_wrt_Y(Y, X):
+    def jac_Y_ominus_X_wrt_Y(Y, X: SO3) -> npt.NDArray:
         """Compute the Jacobian of Y.ominus(X) with respect to the element Y.
 
         :param X: The SO(3) element X.
@@ -204,7 +209,7 @@ class SO3:
         """
         return SO3.jac_right_inverse(Y - X)
 
-    def __add__(self, theta_vec):
+    def __add__(self, theta_vec: npt.NDArray) -> SO3:
         """Add operator performs the "oplus" operation on the element X.
 
         :param theta_vec: The tangent space vector, a 3D column vector.
@@ -212,7 +217,7 @@ class SO3:
         """
         return self.oplus(theta_vec)
 
-    def __sub__(self, X):
+    def __sub__(self, X: SO3) -> npt.NDArray:
         """Subtract operator performs the "ominus" operation at X between X and this element Y.
 
         :param X: The other element
@@ -220,7 +225,7 @@ class SO3:
         """
         return self.ominus(X)
 
-    def __mul__(self, other):
+    def __mul__(self, other: npt.NDArray) -> npt.NDArray:
         """Multiplication operator performs action on vectors.
 
         :param other: 3D column vector, or a matrix of 3D column vectors
@@ -232,7 +237,7 @@ class SO3:
         else:
             raise TypeError('Argument must be a matrix of 3D column vectors')
 
-    def __matmul__(self, other):
+    def __matmul__(self, other: SO3) -> SO3:
         """Matrix multiplication operator performs composition on elements of SO(3).
 
         :param other: Other SO3
@@ -244,7 +249,7 @@ class SO3:
         else:
             raise TypeError('Argument must be an SO3')
 
-    def __len__(self):
+    def __len__(self) -> int:
         """Length operator returns the dimension of the tangent vector space,
         which is equal to the number of degrees of freedom (DOF).
 
@@ -252,14 +257,14 @@ class SO3:
         """
         return 3
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Formal string representation of the object.
 
         :return: The formal representation as a string
         """
         return "SO3(\n" + repr(self.matrix) + "\n)"
 
-    def __str__(self):
+    def __str__(self) -> str:
         """Informal string representation of the object
         prints the matrix representation.
 
@@ -269,7 +274,7 @@ class SO3:
 
 
     @staticmethod
-    def hat(theta_vec):
+    def hat(theta_vec: npt.NDArray) -> npt.NDArray:
         """Performs the hat operator on the tangent space vector theta_vec,
         which returns the corresponding skew symmetric Lie Algebra matrix theta_hat.
 
@@ -282,7 +287,7 @@ class SO3:
                             , [-theta_vec[1], theta_vec[0], 0]])
 
     @staticmethod
-    def vee(theta_hat):
+    def vee(theta_hat: npt.NDArray) -> npt.NDArray:
         """Performs the vee operator on the skew symmetric Lie Algebra matrix theta_hat,
         which returns the corresponding tangent space vector.
 
@@ -292,7 +297,7 @@ class SO3:
         return np.array([[theta_hat[2, 1], theta_hat[0, 2], theta_hat[1, 0]]]).T
 
     @staticmethod
-    def Exp(theta_vec):
+    def Exp(theta_vec: npt.NDArray) -> SO3:
         """Computes the Exp-map on the Lie algebra vector theta_vec,
         which transfers it to the corresponding Lie group element.
 
@@ -312,7 +317,7 @@ class SO3:
         return SO3(R)
 
     @staticmethod
-    def jac_composition_XY_wrt_X(Y):
+    def jac_composition_XY_wrt_X(Y: SO3) -> npt.NDArray:
         """Computes the Jacobian of the composition X.compose(Y) with respect to the element X.
 
         :param Y: SO3 element Y
@@ -321,7 +326,7 @@ class SO3:
         return Y.matrix.T
 
     @staticmethod
-    def jac_composition_XY_wrt_Y():
+    def jac_composition_XY_wrt_Y() -> npt.NDArray:
         """Computes the Jacobian of the composition X.compose(Y) with respect to the element Y.
 
         :return: The Jacobian (3x3 matrix)
@@ -329,7 +334,7 @@ class SO3:
         return np.identity(3)
 
     @staticmethod
-    def jac_right(theta_vec):
+    def jac_right(theta_vec: npt.NDArray) -> npt.NDArray:
         """Compute the right derivative of Exp(theta_vec) with respect to theta_vec.
 
         :param theta_vec: The tangent space 3D column vector.
@@ -345,7 +350,7 @@ class SO3:
                 (theta - np.sin(theta)) / (theta ** 3)) * theta_hat @ theta_hat
 
     @staticmethod
-    def jac_left(theta_vec):
+    def jac_left(theta_vec: npt.NDArray) -> npt.NDArray:
         """Compute the left derivative of Exp(theta_vec) with respect to theta_vec.
 
         :param theta_vec: The tangent space 3D column vector.
@@ -361,7 +366,7 @@ class SO3:
                 (theta - np.sin(theta)) / (theta ** 3)) * theta_hat @ theta_hat
 
     @staticmethod
-    def jac_right_inverse(theta_vec):
+    def jac_right_inverse(theta_vec: npt.NDArray) -> npt.NDArray:
         """Compute the right derivative of Log(X) with respect to X for theta_vec = Log(X).
 
         :param theta_vec: The tangent space 3D column vector.
@@ -377,7 +382,7 @@ class SO3:
                 (1 / theta ** 2) - (1 + np.cos(theta)) / (2 * theta * np.sin(theta))) * theta_hat @ theta_hat
 
     @staticmethod
-    def jac_left_inverse(theta_vec):
+    def jac_left_inverse(theta_vec: npt.NDArray) -> npt.NDArray:
         """Compute the left derivative of Log(X) with respect to X for theta_vec = Log(X).
 
         :param theta_vec: The tangent space 3D column vector.
@@ -393,7 +398,7 @@ class SO3:
                 (1 / theta ** 2) - (1 + np.cos(theta)) / (2 * theta * np.sin(theta))) * theta_hat @ theta_hat
 
     @staticmethod
-    def jac_X_oplus_tau_wrt_X(theta_vec):
+    def jac_X_oplus_tau_wrt_X(theta_vec: npt.NDArray) -> npt.NDArray:
         """Compute the Jacobian of X.oplus(tau) with respect to the element X
 
         :param theta_vec: The tangent space 3D column vector.
@@ -402,7 +407,7 @@ class SO3:
         return SO3.Exp(theta_vec).inverse().matrix
 
     @staticmethod
-    def jac_X_oplus_tau_wrt_tau(theta_vec):
+    def jac_X_oplus_tau_wrt_tau(theta_vec: npt.NDArray) -> npt.NDArray:
         """Compute the Jacobian of X.oplus(tau) with respect to the tangent space vector tau
 
         :param theta_vec: The tangent space 3D column vector.
