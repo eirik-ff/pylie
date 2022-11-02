@@ -17,7 +17,7 @@ class SE3:
         :param pose_tuple: A tuple (rotation (SO3), translation (3D column vector) (optional).
         """
         self.rotation: SO3 = rotation
-        self.translation: npt.NDArray = translation
+        self.translation: npt.NDArray = translation.ravel()
 
     @classmethod
     def from_matrix(cls, T: npt.NDArray) -> SE3:
