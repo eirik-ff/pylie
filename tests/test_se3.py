@@ -437,3 +437,13 @@ def test_string_representation_is_matrix():
 
     # Should be the same as the string representation of the matrix.
     np.testing.assert_equal(str(X), str(X.to_matrix()))
+
+
+def test_multiple_points():
+    X = SE3(SO3(), np.ones((3,)))
+
+    points = np.ones((3, 8))
+    result = X * points
+    answer = 2 * np.ones((3, 8))
+
+    np.testing.assert_equal(result, answer)

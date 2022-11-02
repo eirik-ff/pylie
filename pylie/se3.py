@@ -107,6 +107,9 @@ class SE3:
         :param x: 3D column vector to be transformed (or a matrix of 3D column vectors)
         :return: The resulting rotated and translated 3D column vectors
         """
+        if len(x.shape) == 2:  # in the case of having multiple points
+            return self.rotation * x + self.translation[:, None]
+        
         return self.rotation * x + self.translation
 
     def adjoint(self) -> npt.NDArray:
