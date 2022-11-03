@@ -17,7 +17,7 @@ class SE3:
         :param pose_tuple: A tuple (rotation (SO3), translation (3D column vector) (optional).
         """
         self.rotation: SO3 = rotation
-        self.translation: npt.NDArray = translation.ravel()
+        self.translation: npt.NDArray = translation
 
     @classmethod
     def from_matrix(cls, T: npt.NDArray) -> SE3:
@@ -66,7 +66,8 @@ class SE3:
         if not isinstance(t, np.ndarray) and t.shape == (3,):
             raise TypeError('Translation must be a 3D column vector of shape (3,)')
 
-        self._translation = t
+        # Use asarray() to convert potential matrix to ndarray
+        self._translation = np.asarray(t).flatten()
 
     def to_matrix(self) -> npt.NDArray:
         """Return the matrix representation of this pose.

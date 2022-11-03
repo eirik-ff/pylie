@@ -94,6 +94,8 @@ class SO3:
 
         :param R: 3x3 matrix
         """
+        # Use asarray() to ensure ndarray in case of R being np.matrix
+        R = np.asarray(R)
         # This is slower than necessary, but ensures correct representation.
         self._matrix = to_rotation_matrix(R)
 
