@@ -1,4 +1,9 @@
 # pylie
+
+This is a fork of the original `pylie` library found at [https://github.com/tussedrotten/pylie](https://github.com/tussedrotten/pylie).
+
+---
+
 A small Lie library for Python.
 
 This library represents rotations and poses in 3D.
@@ -7,7 +12,7 @@ It also implements group and Lie operations, as well as their Jacobians.
 ## Install library
 You can install this library to your Python environment directly from this repository using `pip`:
 ```bash
-pip install https://github.com/tussedrotten/pylie/archive/master.zip
+pip install .
 ```
 
 ## Dependencies
