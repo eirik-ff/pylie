@@ -9,6 +9,7 @@ from pylie.common import to_rotation_matrix
 
 class SO3:
     """Represents an element of the SO(3) Lie group (rotations in 3D)."""
+    tangent_dim: int = 3
 
     def __init__(self, R: npt.NDArray = np.identity(3)):
         """Constructs an SO(3) element.

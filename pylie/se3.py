@@ -9,6 +9,7 @@ from pylie import SO3
 
 class SE3:
     """Represents an element of the SE(3) Lie group (poses in 3D)."""
+    tangent_dim: int = 6
 
     def __init__(self, rotation: SO3 = SO3(), translation: npt.NDArray = np.zeros((3,))):
         """Constructs an SE(3) element.

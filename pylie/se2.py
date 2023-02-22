@@ -9,6 +9,7 @@ from pylie import SO2
 
 class SE2:
     """Represents an element of the SE(2) Lie group (poses in 2D)."""
+    tangent_dim: int = 3
 
     def __init__(self, rotation: SO2 = SO2(), translation: npt.NDArray = np.zeros((2,))):
         """Constructs an SE(2) element.

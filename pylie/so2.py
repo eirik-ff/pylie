@@ -9,6 +9,7 @@ from pylie.common import to_rotation_matrix
 
 class SO2:
     """Represents an element of the SO(2) Lie group (rotations in 2D)."""
+    tangent_dim: int = 2
 
     def __init__(self, angle: float = 0.0):
         """Constructs an SO(2) element.
